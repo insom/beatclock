@@ -3,9 +3,10 @@
 #include <linux/i2c-dev.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <time.h>
+#include <unistd.h>
 
 const char numbers[][2] = {
     {0x3f, 0x00}, // 0
@@ -57,14 +58,14 @@ void display(int file, int val, char dot) {
   char strbuf[5];
 
   sprintf(strbuf, "%04d", val);
-  for(char i = 0; i < 4; i++) {
+  for (unsigned char i = 0; i < 4; i++) {
     int num = strbuf[i] - '0';
     memcpy(buf + 1 + (i * 2), numbers[num], 2);
   }
 
-  if(dot) {
-buf[8] |= 0x40;
-}
+  if (dot) {
+    buf[8] |= 0x40;
+  }
 
   /* Load the data. */
   buf[0] = 0x0;
@@ -74,7 +75,15 @@ buf[8] |= 0x40;
   }
 }
 
-void main(void) {
+int main(void) {
   int file = configure_display("/dev/i2c-1");
-  display(file, 100, 1);
+  char dot = 0;
+
+  for (;; dot = !dot) {
+    double t = (double)time(NULL);
+    t = t + 3600; // BMT, not GMT, for Internet time
+    int beats = (int)((t / 86.4)) % 1000;
+    display(file, beats, dot);
+    sleep(1);
+  }
 }
