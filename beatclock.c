@@ -66,6 +66,7 @@ void display(int file, int val, char dot) {
   if (dot) {
     buf[8] |= 0x40;
   }
+  buf[6] |= 0x40; // Decimal pt.
 
   /* Load the data. */
   buf[0] = 0x0;
@@ -82,7 +83,7 @@ int main(void) {
   for (;; dot = !dot) {
     double t = (double)time(NULL);
     t = t + 3600; // BMT, not GMT, for Internet time
-    int beats = (int)((t / 86.4)) % 1000;
+    int beats = (int)((t / 8.64)) % 10000;
     display(file, beats, dot);
     sleep(1);
   }
